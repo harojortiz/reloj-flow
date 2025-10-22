@@ -3,9 +3,11 @@ import { formatCOP } from "@/lib/formatters";
 import KPICard from "@/components/KPICard";
 import { DollarSign, TrendingUp, Package, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const { ventas, clientes } = useVentasStore();
+  const navigate = useNavigate();
 
   // Filtrar ventas del mes actual
   const now = new Date();
@@ -84,6 +86,7 @@ export default function Dashboard() {
           subtitle={`${ventas.filter(v => v.deuda > 0).length} ventas`}
           icon={AlertCircle}
           variant="warning"
+          onClick={() => navigate('/ventas?filtro=deuda')}
         />
       </div>
 

@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useVentasStore } from "@/store/useVentasStore";
 import { formatCOP, formatDate } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import VentaDialog from "@/components/VentaDialog";
+import { useSearchParams } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,21 +22,37 @@ import { toast } from "sonner";
 
 export default function Ventas() {
   const { ventas, clientes, eliminarVenta, obtenerCliente } = useVentasStore();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filtroDeuda, setFiltroDeuda] = useState(false);
   const [ventaDialogOpen, setVentaDialogOpen] = useState(false);
   const [ventaEditando, setVentaEditando] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ventaAEliminar, setVentaAEliminar] = useState<string | null>(null);
 
+  // Activar filtro de deuda al llegar desde Dashboard
+  useEffect(() => {
+    if (searchParams.get('filtro') === 'deuda') {
+      setFiltroDeuda(true);
+      // Limpiar el parámetro de la URL
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
+
   const ventasFiltradas = ventas.filter((v) => {
     const cliente = obtenerCliente(v.clienteId);
     const searchLower = searchTerm.toLowerCase();
-    return (
+    
+    const cumpleBusqueda = (
       v.ref.toLowerCase().includes(searchLower) ||
       v.modelo.toLowerCase().includes(searchLower) ||
       cliente?.nombre.toLowerCase().includes(searchLower) ||
       ''
     );
+    
+    const cumpleDeuda = !filtroDeuda || v.deuda > 0;
+    
+    return cumpleBusqueda && cumpleDeuda;
   });
 
   const handleEditarVenta = (id: string) => {
@@ -105,14 +122,35 @@ export default function Ventas() {
       </div>
 
       <Card className="p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por REF, modelo o cliente..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por REF, modelo o cliente..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          {filtroDeuda && (
+            <Button
+              variant="outline"
+              onClick={() => setFiltroDeuda(false)}
+              className="gap-2"
+            >
+              <X className="w-4 h-4" />
+              Solo con deuda ({ventas.filter(v => v.deuda > 0).length})
+            </Button>
+          )}
+          {!filtroDeuda && (
+            <Button
+              variant="outline"
+              onClick={() => setFiltroDeuda(true)}
+              className="gap-2"
+            >
+              Filtrar con deuda
+            </Button>
+          )}
         </div>
       </Card>
 
