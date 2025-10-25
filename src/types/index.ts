@@ -1,5 +1,12 @@
 export type EstadoVenta = 'PAGADA' | 'PARCIAL' | 'DEUDA';
 
+export type Categoria = {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  color: string;
+};
+
 export type Venta = {
   id: string;
   ref: string;
@@ -17,6 +24,7 @@ export type Venta = {
   estado: EstadoVenta;
   notas?: string;
   costoBase?: number;
+  categoriaId: string;
 };
 
 export type Cliente = {
@@ -34,4 +42,5 @@ export type Modelo = {
   nombre: string;
   costoBase: number;
   precioSugerido: number;
+  categoriaId: string;
 };

@@ -31,7 +31,7 @@ interface VentaDialogProps {
 }
 
 export default function VentaDialog({ open, onOpenChange, ventaId }: VentaDialogProps) {
-  const { ventas, clientes, agregarVenta, actualizarVenta } = useVentasStore();
+  const { ventas, clientes, categorias, agregarVenta, actualizarVenta } = useVentasStore();
   const [neto, setNeto] = useState(0);
   const [cuota1, setCuota1] = useState(0);
   const [cuota2, setCuota2] = useState(0);
@@ -50,6 +50,7 @@ export default function VentaDialog({ open, onOpenChange, ventaId }: VentaDialog
   });
 
   const clienteId = watch("clienteId");
+  const categoriaId = watch("categoriaId");
 
   useEffect(() => {
     if (venta && open) {
@@ -61,6 +62,7 @@ export default function VentaDialog({ open, onOpenChange, ventaId }: VentaDialog
       setValue("clienteId", venta.clienteId);
       setValue("fecha", venta.fecha);
       setValue("notas", venta.notas || "");
+      setValue("categoriaId", venta.categoriaId);
       setNeto(venta.neto);
       setCuota1(venta.cuota1);
       setCuota2(venta.cuota2);
@@ -74,6 +76,7 @@ export default function VentaDialog({ open, onOpenChange, ventaId }: VentaDialog
         clienteId: "",
         fecha: new Date().toISOString().split('T')[0],
         notas: "",
+        categoriaId: "relojes",
       });
       setNeto(0);
       setCuota1(0);
@@ -96,6 +99,7 @@ export default function VentaDialog({ open, onOpenChange, ventaId }: VentaDialog
       notas: data.notas,
       venta: data.venta || calculos.venta,
       costoBase: data.costoBase,
+      categoriaId: data.categoriaId,
       ...calculos,
     };
 
@@ -234,6 +238,28 @@ export default function VentaDialog({ open, onOpenChange, ventaId }: VentaDialog
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <Label htmlFor="categoriaId">Categoría</Label>
+              <Select
+                value={categoriaId}
+                onValueChange={(value) => setValue("categoriaId", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categorias.map((categoria) => (
+                    <SelectItem key={categoria.id} value={categoria.id}>
+                      {categoria.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.categoriaId && (
+                <p className="text-sm text-destructive mt-1">{errors.categoriaId.message}</p>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="clienteId">Cliente</Label>
               <Select
                 value={clienteId}
@@ -254,18 +280,18 @@ export default function VentaDialog({ open, onOpenChange, ventaId }: VentaDialog
                 <p className="text-sm text-destructive mt-1">{errors.clienteId.message}</p>
               )}
             </div>
+          </div>
 
-            <div>
-              <Label htmlFor="fecha">Fecha</Label>
-              <Input
-                id="fecha"
-                type="date"
-                {...register("fecha")}
-              />
-              {errors.fecha && (
-                <p className="text-sm text-destructive mt-1">{errors.fecha.message}</p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="fecha">Fecha</Label>
+            <Input
+              id="fecha"
+              type="date"
+              {...register("fecha")}
+            />
+            {errors.fecha && (
+              <p className="text-sm text-destructive mt-1">{errors.fecha.message}</p>
+            )}
           </div>
 
           <div>

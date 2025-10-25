@@ -1,7 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Venta, Cliente } from '@/types';
+import { Venta, Cliente, Categoria } from '@/types';
 import { calcularVentaCompleta } from '@/lib/calculators';
+
+// Categorías disponibles
+const categoriasIniciales: Categoria[] = [
+  { id: 'relojes', nombre: 'Relojes', descripcion: 'Relojes de lujo y accesorios', color: 'hsl(var(--primary))' },
+  { id: 'joyas', nombre: 'Joyas', descripcion: 'Anillos, collares, pulseras', color: 'hsl(var(--accent))' },
+  { id: 'otros', nombre: 'Otros', descripcion: 'Otros productos', color: 'hsl(var(--secondary))' },
+];
 
 // Datos de ejemplo
 const clientesIniciales: Cliente[] = [
@@ -29,6 +36,7 @@ const ventasIniciales: Venta[] = [
     clienteId: '1',
     fecha: '2025-01-15',
     notas: 'Cliente preferencial',
+    categoriaId: 'relojes',
   },
   {
     id: '2',
@@ -40,6 +48,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(8500000, 8500000 * 1.19, 0),
     clienteId: '2',
     fecha: '2025-02-01',
+    categoriaId: 'relojes',
   },
   {
     id: '3',
@@ -51,6 +60,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(15000000, 5000000, 5000000),
     clienteId: '3',
     fecha: '2025-02-10',
+    categoriaId: 'relojes',
   },
   {
     id: '4',
@@ -62,6 +72,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(18000000, 0, 0),
     clienteId: '4',
     fecha: '2025-02-15',
+    categoriaId: 'relojes',
   },
   {
     id: '5',
@@ -73,6 +84,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(45000000, 20000000, 15000000),
     clienteId: '5',
     fecha: '2025-02-18',
+    categoriaId: 'relojes',
   },
   {
     id: '6',
@@ -84,6 +96,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(9500000, 9500000 * 1.19, 0),
     clienteId: '6',
     fecha: '2025-03-01',
+    categoriaId: 'relojes',
   },
   {
     id: '7',
@@ -95,6 +108,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(32000000, 15000000, 10000000),
     clienteId: '7',
     fecha: '2025-03-05',
+    categoriaId: 'relojes',
   },
   {
     id: '8',
@@ -106,6 +120,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(12000000, 0, 0),
     clienteId: '8',
     fecha: '2025-03-10',
+    categoriaId: 'relojes',
   },
   {
     id: '9',
@@ -117,6 +132,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(10500000, 5000000, 0),
     clienteId: '9',
     fecha: '2025-03-12',
+    categoriaId: 'relojes',
   },
   {
     id: '10',
@@ -128,6 +144,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(38000000, 20000000, 18000000),
     clienteId: '10',
     fecha: '2025-03-15',
+    categoriaId: 'relojes',
   },
   {
     id: '11',
@@ -139,6 +156,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(7800000, 4000000, 0),
     clienteId: '1',
     fecha: '2025-03-18',
+    categoriaId: 'relojes',
   },
   {
     id: '12',
@@ -150,6 +168,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(11200000, 11200000 * 1.19, 0),
     clienteId: '2',
     fecha: '2025-03-20',
+    categoriaId: 'relojes',
   },
   {
     id: '13',
@@ -161,6 +180,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(4500000, 2000000, 2000000),
     clienteId: '3',
     fecha: '2025-03-22',
+    categoriaId: 'relojes',
   },
   {
     id: '14',
@@ -172,6 +192,7 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(2200000, 2200000 * 1.19, 0),
     clienteId: '4',
     fecha: '2025-04-01',
+    categoriaId: 'relojes',
   },
   {
     id: '15',
@@ -183,12 +204,14 @@ const ventasIniciales: Venta[] = [
     ...calcularVentaCompleta(28000000, 10000000, 0),
     clienteId: '5',
     fecha: '2025-04-05',
+    categoriaId: 'relojes',
   },
 ];
 
 interface VentasState {
   ventas: Venta[];
   clientes: Cliente[];
+  categorias: Categoria[];
   agregarVenta: (venta: Omit<Venta, 'id'>) => void;
   actualizarVenta: (id: string, venta: Partial<Venta>) => void;
   eliminarVenta: (id: string) => void;
@@ -203,6 +226,7 @@ export const useVentasStore = create<VentasState>()(
     (set, get) => ({
       ventas: ventasIniciales,
       clientes: clientesIniciales,
+      categorias: categoriasIniciales,
 
       agregarVenta: (venta) =>
         set((state) => ({

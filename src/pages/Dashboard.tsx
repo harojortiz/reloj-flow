@@ -1,20 +1,31 @@
+import { useState } from "react";
 import { useVentasStore } from "@/store/useVentasStore";
 import { formatCOP } from "@/lib/formatters";
 import KPICard from "@/components/KPICard";
 import { DollarSign, TrendingUp, Package, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export default function Dashboard() {
-  const { ventas, clientes } = useVentasStore();
+  const { ventas, clientes, categorias } = useVentasStore();
   const navigate = useNavigate();
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string | null>(null);
 
   // Filtrar ventas del mes actual
   const now = new Date();
   const mesActual = now.getMonth();
   const añoActual = now.getFullYear();
 
-  const ventasMes = ventas.filter((v) => {
+  const ventasFiltradas = ventas.filter((v) => {
+    if (categoriaSeleccionada && v.categoriaId !== categoriaSeleccionada) {
+      return false;
+    }
+    return true;
+  });
+
+  const ventasMes = ventasFiltradas.filter((v) => {
     const fecha = new Date(v.fecha);
     return fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual;
   });
@@ -23,10 +34,10 @@ export default function Dashboard() {
   const ventasDelMes = ventasMes.reduce((sum, v) => sum + v.venta, 0);
   const gananciasDelMes = ventasMes.reduce((sum, v) => sum + v.ganancias, 0);
   const unidadesVendidas = ventasMes.length;
-  const deudaPendiente = ventas.reduce((sum, v) => sum + v.deuda, 0);
+  const deudaPendiente = ventasFiltradas.reduce((sum, v) => sum + v.deuda, 0);
 
   // Top 5 modelos más vendidos
-  const modelosCount = ventas.reduce((acc, v) => {
+  const modelosCount = ventasFiltradas.reduce((acc, v) => {
     acc[v.modelo] = (acc[v.modelo] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -36,7 +47,7 @@ export default function Dashboard() {
     .slice(0, 5);
 
   // Top 5 clientes
-  const clientesVentas = ventas.reduce((acc, v) => {
+  const clientesVentas = ventasFiltradas.reduce((acc, v) => {
     acc[v.clienteId] = (acc[v.clienteId] || 0) + v.venta;
     return acc;
   }, {} as Record<string, number>);
@@ -58,6 +69,29 @@ export default function Dashboard() {
         </p>
       </div>
 
+      <Card className="p-4">
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-sm font-medium text-muted-foreground">Filtrar por categoría:</span>
+          <Button
+            variant={categoriaSeleccionada === null ? "default" : "outline"}
+            size="sm"
+            onClick={() => setCategoriaSeleccionada(null)}
+          >
+            Todas
+          </Button>
+          {categorias.map((cat) => (
+            <Button
+              key={cat.id}
+              variant={categoriaSeleccionada === cat.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCategoriaSeleccionada(cat.id)}
+            >
+              {cat.nombre}
+            </Button>
+          ))}
+        </div>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Ventas del Mes"
@@ -65,6 +99,7 @@ export default function Dashboard() {
           subtitle={`${unidadesVendidas} unidades`}
           icon={DollarSign}
           variant="default"
+          onClick={() => navigate(`/ventas?filtro=mes&categoria=${categoriaSeleccionada || 'todas'}`)}
         />
         <KPICard
           title="Ganancias del Mes"
@@ -72,6 +107,7 @@ export default function Dashboard() {
           subtitle={`Margen: ${ventasDelMes > 0 ? ((gananciasDelMes / ventasDelMes) * 100).toFixed(1) : 0}%`}
           icon={TrendingUp}
           variant="success"
+          onClick={() => navigate(`/ventas?filtro=mes&categoria=${categoriaSeleccionada || 'todas'}`)}
         />
         <KPICard
           title="Unidades Vendidas"
@@ -79,14 +115,15 @@ export default function Dashboard() {
           subtitle="Este mes"
           icon={Package}
           variant="default"
+          onClick={() => navigate(`/ventas?filtro=mes&categoria=${categoriaSeleccionada || 'todas'}`)}
         />
         <KPICard
           title="Deuda Pendiente"
           value={formatCOP(deudaPendiente)}
-          subtitle={`${ventas.filter(v => v.deuda > 0).length} ventas`}
+          subtitle={`${ventasFiltradas.filter(v => v.deuda > 0).length} ventas`}
           icon={AlertCircle}
           variant="warning"
-          onClick={() => navigate('/ventas?filtro=deuda')}
+          onClick={() => navigate(`/ventas?filtro=deuda&categoria=${categoriaSeleccionada || 'todas'}`)}
         />
       </div>
 

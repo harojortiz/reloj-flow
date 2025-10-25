@@ -4,7 +4,7 @@ import { formatCOP, formatDate } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, X, Filter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import VentaDialog from "@/components/VentaDialog";
 import { useSearchParams } from "react-router-dom";
@@ -21,22 +21,34 @@ import {
 import { toast } from "sonner";
 
 export default function Ventas() {
-  const { ventas, clientes, eliminarVenta, obtenerCliente } = useVentasStore();
+  const { ventas, clientes, categorias, eliminarVenta, obtenerCliente } = useVentasStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroDeuda, setFiltroDeuda] = useState(false);
+  const [filtroMes, setFiltroMes] = useState(false);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string | null>(null);
   const [ventaDialogOpen, setVentaDialogOpen] = useState(false);
   const [ventaEditando, setVentaEditando] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ventaAEliminar, setVentaAEliminar] = useState<string | null>(null);
 
-  // Activar filtro de deuda al llegar desde Dashboard
+  // Activar filtros al llegar desde Dashboard
   useEffect(() => {
-    if (searchParams.get('filtro') === 'deuda') {
+    const filtro = searchParams.get('filtro');
+    const categoria = searchParams.get('categoria');
+    
+    if (filtro === 'deuda') {
       setFiltroDeuda(true);
-      // Limpiar el parámetro de la URL
-      setSearchParams({});
+    } else if (filtro === 'mes') {
+      setFiltroMes(true);
     }
+    
+    if (categoria && categoria !== 'todas') {
+      setCategoriaSeleccionada(categoria);
+    }
+    
+    // Limpiar parámetros de la URL
+    setSearchParams({});
   }, [searchParams, setSearchParams]);
 
   const ventasFiltradas = ventas.filter((v) => {
@@ -52,7 +64,15 @@ export default function Ventas() {
     
     const cumpleDeuda = !filtroDeuda || v.deuda > 0;
     
-    return cumpleBusqueda && cumpleDeuda;
+    const cumpleMes = !filtroMes || (() => {
+      const fecha = new Date(v.fecha);
+      const now = new Date();
+      return fecha.getMonth() === now.getMonth() && fecha.getFullYear() === now.getFullYear();
+    })();
+    
+    const cumpleCategoria = !categoriaSeleccionada || v.categoriaId === categoriaSeleccionada;
+    
+    return cumpleBusqueda && cumpleDeuda && cumpleMes && cumpleCategoria;
   });
 
   const handleEditarVenta = (id: string) => {
@@ -121,7 +141,7 @@ export default function Ventas() {
         </Button>
       </div>
 
-      <Card className="p-4">
+      <Card className="p-4 space-y-3">
         <div className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -132,25 +152,52 @@ export default function Ventas() {
               className="pl-10"
             />
           </div>
-          {filtroDeuda && (
+        </div>
+        
+        <div className="flex flex-wrap gap-2 items-center">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Filtros:</span>
+          
+          <Button
+            variant={filtroMes ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFiltroMes(!filtroMes)}
+            className="gap-2"
+          >
+            {filtroMes && <X className="w-3 h-3" />}
+            Este mes
+          </Button>
+          
+          <Button
+            variant={filtroDeuda ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFiltroDeuda(!filtroDeuda)}
+            className="gap-2"
+          >
+            {filtroDeuda && <X className="w-3 h-3" />}
+            Con deuda ({ventas.filter(v => v.deuda > 0).length})
+          </Button>
+          
+          <div className="h-4 w-px bg-border mx-2" />
+          
+          <span className="text-sm text-muted-foreground">Categoría:</span>
+          <Button
+            variant={categoriaSeleccionada === null ? "default" : "outline"}
+            size="sm"
+            onClick={() => setCategoriaSeleccionada(null)}
+          >
+            Todas
+          </Button>
+          {categorias.map((cat) => (
             <Button
-              variant="outline"
-              onClick={() => setFiltroDeuda(false)}
-              className="gap-2"
+              key={cat.id}
+              variant={categoriaSeleccionada === cat.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCategoriaSeleccionada(cat.id)}
             >
-              <X className="w-4 h-4" />
-              Solo con deuda ({ventas.filter(v => v.deuda > 0).length})
+              {cat.nombre}
             </Button>
-          )}
-          {!filtroDeuda && (
-            <Button
-              variant="outline"
-              onClick={() => setFiltroDeuda(true)}
-              className="gap-2"
-            >
-              Filtrar con deuda
-            </Button>
-          )}
+          ))}
         </div>
       </Card>
 

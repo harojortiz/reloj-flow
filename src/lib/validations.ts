@@ -11,6 +11,7 @@ export const ventaSchema = z.object({
   clienteId: z.string().min(1, "Cliente es requerido"),
   fecha: z.string().min(1, "Fecha es requerida"),
   notas: z.string().optional(),
+  categoriaId: z.string().min(1, "Categoría es requerida"),
 });
 
 export const clienteSchema = z.object({
