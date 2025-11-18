@@ -43,4 +43,5 @@ export type Modelo = {
   costoBase: number;
   precioSugerido: number;
   categoriaId: string;
+  imagen?: string;
 };

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useVentasStore } from "@/store/useVentasStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Search, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, Image as ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatCOP } from "@/lib/formatters";
@@ -152,6 +152,7 @@ export default function Productos() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[80px]">Imagen</TableHead>
                   <TableHead>REF</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Categoría</TableHead>
@@ -164,7 +165,7 @@ export default function Productos() {
               <TableBody>
                 {filteredModelos.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No se encontraron productos
                     </TableCell>
                   </TableRow>
@@ -173,6 +174,19 @@ export default function Productos() {
                     const { margen, porcentaje } = calcularMargen(modelo);
                     return (
                       <TableRow key={modelo.id}>
+                        <TableCell>
+                          <div className="w-16 h-16 rounded-md border border-border overflow-hidden bg-muted flex items-center justify-center">
+                            {modelo.imagen ? (
+                              <img
+                                src={modelo.imagen}
+                                alt={modelo.nombre}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="font-mono font-medium">
                           {modelo.ref}
                         </TableCell>
