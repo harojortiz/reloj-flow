@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Venta, Cliente, Categoria } from '@/types';
+import { Venta, Cliente, Categoria, Modelo } from '@/types';
 import { calcularVentaCompleta } from '@/lib/calculators';
 
 // Categorías disponibles
@@ -8,6 +8,18 @@ const categoriasIniciales: Categoria[] = [
   { id: 'relojes', nombre: 'Relojes', descripcion: 'Relojes de lujo y accesorios', color: 'hsl(var(--primary))' },
   { id: 'joyas', nombre: 'Joyas', descripcion: 'Anillos, collares, pulseras', color: 'hsl(var(--accent))' },
   { id: 'otros', nombre: 'Otros', descripcion: 'Otros productos', color: 'hsl(var(--secondary))' },
+];
+
+// Modelos iniciales
+const modelosIniciales: Modelo[] = [
+  { id: '1', ref: 'ROL-001', nombre: 'Rolex Submariner', costoBase: 18000000, precioSugerido: 25000000, categoriaId: 'relojes' },
+  { id: '2', ref: 'TAG-002', nombre: 'TAG Heuer Carrera', costoBase: 6000000, precioSugerido: 8500000, categoriaId: 'relojes' },
+  { id: '3', ref: 'OMG-003', nombre: 'Omega Seamaster', costoBase: 11000000, precioSugerido: 15000000, categoriaId: 'relojes' },
+  { id: '4', ref: 'CAR-004', nombre: 'Cartier Santos', costoBase: 13000000, precioSugerido: 18000000, categoriaId: 'relojes' },
+  { id: '5', ref: 'PAT-005', nombre: 'Patek Philippe Nautilus', costoBase: 35000000, precioSugerido: 45000000, categoriaId: 'relojes' },
+  { id: '6', ref: 'BRE-006', nombre: 'Breitling Navitimer', costoBase: 7000000, precioSugerido: 9500000, categoriaId: 'relojes' },
+  { id: '7', ref: 'ROL-007', nombre: 'Rolex Daytona', costoBase: 25000000, precioSugerido: 32000000, categoriaId: 'relojes' },
+  { id: '8', ref: 'IWC-008', nombre: 'IWC Portugieser', costoBase: 9000000, precioSugerido: 12000000, categoriaId: 'relojes' },
 ];
 
 // Datos de ejemplo
@@ -212,6 +224,7 @@ interface VentasState {
   ventas: Venta[];
   clientes: Cliente[];
   categorias: Categoria[];
+  modelos: Modelo[];
   agregarVenta: (venta: Omit<Venta, 'id'>) => void;
   actualizarVenta: (id: string, venta: Partial<Venta>) => void;
   eliminarVenta: (id: string) => void;
@@ -219,6 +232,10 @@ interface VentasState {
   actualizarCliente: (id: string, cliente: Partial<Cliente>) => void;
   eliminarCliente: (id: string) => void;
   obtenerCliente: (id: string) => Cliente | undefined;
+  agregarModelo: (modelo: Omit<Modelo, 'id'>) => void;
+  actualizarModelo: (id: string, modelo: Partial<Modelo>) => void;
+  eliminarModelo: (id: string) => void;
+  obtenerModelo: (id: string) => Modelo | undefined;
 }
 
 export const useVentasStore = create<VentasState>()(
@@ -227,6 +244,7 @@ export const useVentasStore = create<VentasState>()(
       ventas: ventasIniciales,
       clientes: clientesIniciales,
       categorias: categoriasIniciales,
+      modelos: modelosIniciales,
 
       agregarVenta: (venta) =>
         set((state) => ({
@@ -269,6 +287,28 @@ export const useVentasStore = create<VentasState>()(
         })),
 
       obtenerCliente: (id) => get().clientes.find((c) => c.id === id),
+
+      agregarModelo: (modelo) =>
+        set((state) => ({
+          modelos: [
+            ...state.modelos,
+            { ...modelo, id: `${Date.now()}` },
+          ],
+        })),
+
+      actualizarModelo: (id, modeloActualizado) =>
+        set((state) => ({
+          modelos: state.modelos.map((m) =>
+            m.id === id ? { ...m, ...modeloActualizado } : m
+          ),
+        })),
+
+      eliminarModelo: (id) =>
+        set((state) => ({
+          modelos: state.modelos.filter((m) => m.id !== id),
+        })),
+
+      obtenerModelo: (id) => get().modelos.find((m) => m.id === id),
     }),
     {
       name: 'ventas-storage',
