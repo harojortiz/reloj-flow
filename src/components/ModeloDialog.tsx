@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ import { useVentasStore } from "@/store/useVentasStore";
 import { Modelo } from "@/types";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Upload, X } from "lucide-react";
 
 const modeloSchema = z.object({
   ref: z.string().min(1, "La referencia es requerida").max(20, "Máximo 20 caracteres"),
@@ -36,6 +38,7 @@ const modeloSchema = z.object({
   costoBase: z.coerce.number().min(0, "El costo debe ser mayor a 0"),
   precioSugerido: z.coerce.number().min(0, "El precio debe ser mayor a 0"),
   categoriaId: z.string().min(1, "Selecciona una categoría"),
+  imagen: z.string().optional(),
 });
 
 type ModeloFormData = z.infer<typeof modeloSchema>;
@@ -53,6 +56,7 @@ export default function ModeloDialog({
 }: ModeloDialogProps) {
   const { agregarModelo, actualizarModelo, categorias } = useVentasStore();
   const { toast } = useToast();
+  const [previewImage, setPreviewImage] = useState<string>("");
 
   const form = useForm<ModeloFormData>({
     resolver: zodResolver(modeloSchema),
@@ -62,6 +66,7 @@ export default function ModeloDialog({
       costoBase: 0,
       precioSugerido: 0,
       categoriaId: "relojes",
+      imagen: "",
     },
   });
 
@@ -73,7 +78,9 @@ export default function ModeloDialog({
         costoBase: modelo.costoBase,
         precioSugerido: modelo.precioSugerido,
         categoriaId: modelo.categoriaId,
+        imagen: modelo.imagen || "",
       });
+      setPreviewImage(modelo.imagen || "");
     } else {
       form.reset({
         ref: "",
@@ -81,7 +88,9 @@ export default function ModeloDialog({
         costoBase: 0,
         precioSugerido: 0,
         categoriaId: "relojes",
+        imagen: "",
       });
+      setPreviewImage("");
     }
   }, [modelo, form]);
 
@@ -101,6 +110,7 @@ export default function ModeloDialog({
       costoBase: data.costoBase,
       precioSugerido: data.precioSugerido,
       categoriaId: data.categoriaId,
+      imagen: data.imagen,
     };
 
     if (modelo) {
@@ -118,7 +128,35 @@ export default function ModeloDialog({
     }
 
     form.reset();
+    setPreviewImage("");
     onOpenChange(false);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Archivo muy grande",
+          description: "La imagen no debe superar 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        form.setValue("imagen", base64String);
+        setPreviewImage(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    form.setValue("imagen", "");
+    setPreviewImage("");
   };
 
   return (
@@ -137,6 +175,48 @@ export default function ModeloDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-4">
+              <FormLabel>Imagen del Producto</FormLabel>
+              <div className="flex flex-col gap-4">
+                {previewImage ? (
+                  <div className="relative w-full h-48 rounded-lg border-2 border-border overflow-hidden bg-muted">
+                    <img
+                      src={previewImage}
+                      alt="Preview"
+                      className="w-full h-full object-contain"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={removeImage}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-10 h-10 mb-3 text-muted-foreground" />
+                      <p className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-semibold">Click para subir</span> o arrastra
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG, WEBP (MAX. 5MB)
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleImageUpload}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+
             <FormField
               control={form.control}
               name="ref"
@@ -244,6 +324,7 @@ export default function ModeloDialog({
                 variant="outline"
                 onClick={() => {
                   form.reset();
+                  setPreviewImage("");
                   onOpenChange(false);
                 }}
               >
